@@ -1,0 +1,39 @@
+version: '3.7'
+
+volumes:
+  postgres_data:
+
+networks:
+  webnet:
+
+services:
+  postgres:
+    image: postgres
+    networks:
+      - webnet
+    container_name: postgres_petstatus
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=petstatus
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+
+  auth_microservice:
+    container_name: auth_microservice
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ../.develop.env
+    networks:
+      - webnet
+    depends_on:
+      - postgres
+    command: npm run start:dev
+    ports:
+      - 3000:3000
